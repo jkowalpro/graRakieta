@@ -14,12 +14,16 @@ export default class Scene extends Phaser.Scene {
     this.load.image("bg", "assets/bg.png");
     this.load.image("ship", "assets/ship.png");
     this.load.image("rakietap1", "assets/rakietap1.png");
+    this.load.image("powerup", "assets/powerup.png");
   }
 
   create() {
+    this.lives = 3;
+
     this.kDownShip2 = 1;
     this.kDownShip3 = 1;
     this.background = this.add.image(256 / 2, 272 / 2, "bg");
+    this.scoreText = this.add.text(100, 200, "Lives:" + this.lives);
     this.ship = this.physics.add.image(100, 200, "ship");
     this.rakietap1 = this.physics.add.image(200, 150, "rakietap1");
     this.rakietap2 = this.physics.add.image(200, 100, "rakietap1");
@@ -34,6 +38,7 @@ export default class Scene extends Phaser.Scene {
     this.rakietas1.play("ship_anim");
 
     this.keys = this.input.keyboard.createCursorKeys();
+    /*
     this.physics.add.overlap(
       this.ship,
       this.rakietap1,
@@ -41,7 +46,47 @@ export default class Scene extends Phaser.Scene {
       null,
       this
     );
+    this.physics.add.overlap(
+      this.ship,
+      this.rakietas1,
+      this.zderzenie,
+      null,
+      this
+    );
+    this.physics.add.overlap(
+      this.ship,
+      this.rakietap2,
+      this.zderzenie,
+      null,
+      this
+    );
+    */
+    this.enemiesShip = this.physics.add.group();
+    this.enemiesShip.add(this.rakietap1);
+    this.enemiesShip.add(this.rakietap2);
+    this.enemiesShip.add(this.rakietas1);
+    this.physics.add.overlap(
+      this.ship,
+      this.enemiesShip,
+      this.onEnemiesCollide,
+      null,
+      this
+    );
+    this.createPowerUps();
   }
+
+  createPowerUps() {
+    this.powerUps = this.physics.add.group();
+
+    this.powerUp1 = this.physics.add.sprite(0, 0, "powerup");
+    this.powerUp1.setRandomPosition(0, 0, this.sceneWight, this.sceneHeight);
+    this.powerUp1.setVelocity(100, 100);
+    this.physics.world.setBoundsCollision();
+    this.powerUp1.setCollideWorldBounds(true);
+    this.powerUp1.setBounce(1);
+  }
+
+  onPowerUpPickup(powerup) {}
 
   update() {
     let speed = 1.5;
@@ -103,7 +148,19 @@ export default class Scene extends Phaser.Scene {
       this.rakietap2.x = Math.random() * 256;
     }
   }
-
+  onEnemiesCollide() {
+    if (this.lives > 0) {
+      this.lives = this.lives - 1;
+      this.updateText();
+      this.ship.x = Math.random() * 256;
+      this.ship.y = Math.random() * 272;
+    } else {
+      this.zderzenie();
+    }
+  }
+  updateText() {
+    this.scoreText.setText("Lives:" + this.lives);
+  }
   zderzenie() {
     this.scene.start("Koniecgry");
   }
